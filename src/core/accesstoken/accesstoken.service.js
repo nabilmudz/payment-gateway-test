@@ -8,7 +8,7 @@ class AccessTokenService extends BaseService {
     super(prism);
     this.clientKey = process.env.CLIENT_KEY
     this.url = process.env.BASE_URL
-    this.privateKey = fs.readFileSync('./certs/private.key', 'utf8');
+    this.privateKey = fs.readFileSync('./certs/key_sandbox', 'utf8');
   }
 
   generateSignature(clientID, timestamp) {
@@ -47,7 +47,7 @@ class AccessTokenService extends BaseService {
         "tokenType": "Bearer",
         "expiresIn": "3600"
        } 
-    const dbRecord = await this.db.AccessToken.create({
+    const dbRecord = await this.db.accessToken.create({
       data: {
         app_id: app_id,
         user_id: user_id,

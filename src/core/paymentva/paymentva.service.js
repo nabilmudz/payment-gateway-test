@@ -8,7 +8,7 @@ class PaymentVirtualAccountService extends BaseService {
     super(prism);
     this.clientKey = process.env.CLIENT_KEY;
     this.url = process.env.BASE_URL;
-    this.privateKey = fs.readFileSync('./certs/private.key', 'utf8');
+    this.privateKey = fs.readFileSync('./certs/key_sandbox', 'utf8');
   }
 
   generateSignature(httpMethod, endpointUrl, accessToken, requestBody, timestamp) {
@@ -62,7 +62,7 @@ class PaymentVirtualAccountService extends BaseService {
         },
       };
 
-      const dbRecord = await this.db.PaymentVA.create({
+      const dbRecord = await this.db.paymentVA.create({
         data: {
           app_id: app_id,
           user_id: user_id,
