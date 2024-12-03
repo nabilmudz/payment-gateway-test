@@ -1,7 +1,8 @@
 import http from "http";
+import { env } from "process";
 import app from "./app.js";
 
-const port = process.env.PORT;
+const port = env.PORT || 8001;
 
 const server = http.createServer(app);
 // const server = https.createServer(app, options);
