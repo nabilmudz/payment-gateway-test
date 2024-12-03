@@ -8,7 +8,7 @@ class PaymentVirtualAccountService extends BaseService {
     super(prism);
     this.clientKey = process.env.CLIENT_KEY;
     // this.url = process.env.BASE_URL;
-    this.privateKey = fs.readFileSync('./certs/key_sandbox', 'utf8');
+    this.privateKey = fs.readFileSync('./certs/private_key.pem', 'utf8');
   }
 
   generateSignature(httpMethod, endpointUrl, accessToken, requestBody, timestamp) {
