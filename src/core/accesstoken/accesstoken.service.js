@@ -27,11 +27,11 @@ class AccessTokenService extends BaseService {
       throw new Error("Signature mismatch.");
     }
 
-    const xaccessToken = this.generateAccessToken(clientKey, timestamp);
+    const accessToken = this.generateAccessToken(clientKey, timestamp);
     const response = {
       responseCode: "2007300",
       responseMessage: "Successful",
-      xaccessToken,
+      accessToken,
       tokenType: "Bearer",
       expiresIn: "3600",
     };
