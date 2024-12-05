@@ -18,42 +18,46 @@ model App {
   name String
   code String
 
-  accessTokens AccessToken[]
-  inquiryVA InquiryVA[]
-  paymentVA PaymentVA[]
+  // accessTokens AccessToken[]
+  // inquiryVA InquiryVA[]
+  // paymentVA PaymentVA[]
+  @@map("App")
 }
 
 model AccessToken {
   id    Int     @id @default(autoincrement())
-  app_id Int
-  user_id String
+  // app_id Int
+  // user_id String
   date DateTime
   json_header Json
   json_payload Json
   json_response Json?
-  app          App       @relation(fields: [app_id], references: [id])
+  // app          App       @relation(fields: [app_id], references: [id])
+  @@map("AccessToken")
 }
 
 model InquiryVA {
   id                          Int       @id @default(autoincrement())
-  app_id Int
-  user_id String
+  // app_id Int
+  // user_id String
   date DateTime
   json_headers Json
   json_payload Json
   json_response Json?
 
-  app          App       @relation(fields: [app_id], references: [id])
+  // app          App       @relation(fields: [app_id], references: [id])
+  @@map("InquiryVA")
 }
 
 model PaymentVA {
   id                          Int       @id @default(autoincrement())
-  app_id Int
-  user_id String
+  // app_id Int
+  // user_id String
   date DateTime
   json_headers Json
   json_payload Json
   json_response Json?
 
-  app          App       @relation(fields: [app_id], references: [id])
+  // app          App       @relation(fields: [app_id], references: [id])
+  @@map("PaymentVA")
 }

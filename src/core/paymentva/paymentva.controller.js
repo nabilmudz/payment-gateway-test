@@ -10,7 +10,13 @@ class PaymentVAController extends BaseController {
   }
 
   paymentVirtualAccount = this.wrapper(async (req, res) => {
-    const data = await this.#service.paymentVirtualAccount(req.body);
+    const authorization = req.headers['authorization']
+    const xTimestamp = req.headers['x-timestamp'];
+    const xSignature = req.headers['x-signature']; 
+    const xPartnerId = req.headers['x-partner-id'];
+    const xExternalId = req.headers['x-external-id'];
+    const xChannelId = req.headers['channel-id'];
+    const data = await this.#service.paymentVirtualAccount(authorization, xTimestamp, xSignature, xPartnerId,xExternalId, xChannelId, req.body);
     return this.created(res, data, "PaymentVA berhasil dibuat");
   });
 

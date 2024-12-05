@@ -1,75 +1,79 @@
 import crypto from 'crypto';
 import fs from 'fs';
+import jwt from 'jsonwebtoken';
 import BaseService from "../../base/service.base.js";
 import prism from "../../config/db.js";
 
 class AccessTokenService extends BaseService {
   constructor() {
     super(prism);
-    this.clientKey = process.env.CLIENT_KEY
-    this.url = process.env.BASE_URL
+    this.clientKey = process.env.CLIENT_KEY;
+    this.clientSecret = process.env.CLIENT_SECRET;
+    this.baseUrl = process.env.BASE_URL;
     this.privateKey = fs.readFileSync('./certs/private_key.pem', 'utf8');
   }
 
-  generateSignature(clientID, timestamp) {
-    const stringToSign = `${clientID}|${timestamp}`;
-    const sign = crypto.createSign('SHA256');
-    sign.update(stringToSign);
-    sign.end();
-
-    const signature = sign.sign(this.privateKey, 'base64');
-    return signature;
-  }
-  
-  getAccessToken = async (payload) => {
-    const timestamp = new Date().toISOString();
-    const signature = this.generateSignature(this.clientKey, timestamp);
-    const user_id = "38yhykjr3h2i9ru" //example
-    const app_id = 1; //example
-
+  getAccessToken = async (clientKey, timestamp, clientSignature, payload) => {
     const headers = {
-      'Content-Type': 'application/json',
-      'x-client-key': this.clientKey,
-      'x-timestamp': timestamp,
-      'x-signature': signature,
-    };
-
-    const data = {
-      grantType: payload.grantType,
-    };
-
-    try {
-      const exResponse = {
-        "responseCode": "2007300",
-        "responseMessage": "Successful",
-        "accessToken": 
-        "AAIgM2U1ZjhiNTA3YWQyNjU5MWUzYjFmZDhlMWNjZTdiMjaAz_GyUy-pvwA2Of0GO1oDIVo6dMH1bqv6MXfZV9kV0wm9zHU6HgWCO03ktoD86Rl-uhBlVIDtW-Np1Q8oR-BYaupIOt783PeP0aR-zjNgtvoN55M7XKeDqltK6Ll7Z0-RnruHVyxA1wqE6cjJbRun",
-        "tokenType": "Bearer",
-        "expiresIn": "3600"
-       } 
-    const dbRecord = await this.db.accessToken.create({
-      data: {
-        app_id: app_id,
-        user_id: user_id,
-        date: new Date(),
-        json_header: headers,
-        json_payload: data,
-        json_response: exResponse
-      },
-    });
-      return exResponse;
-    } catch (error) {
-      throw new Error(`Failed to get access token: ${error.message}`);
+      "x-client-key": clientKey,
+      "x-timestamp": timestamp,
+      "x-signature": clientSignature,
     }
 
-    // try {
-    //   const response = await axios.post(this.url, data, { headers });
-    //   return response.data;
-    // } catch (error) {
-    //   throw new Error(`Failed to get access token: ${error.message}`);
-    // }
+    const stringToSign = `${clientKey}|${timestamp}`;
+    const generatedSignature = this.generateSignature(stringToSign);
+
+    if (clientSignature !== generatedSignature) {
+      throw new Error("Signature mismatch.");
+    }
+
+    const xaccessToken = this.generateAccessToken(clientKey, timestamp);
+    const response = {
+      responseCode: "2007300",
+      responseMessage: "Successful",
+      xaccessToken,
+      tokenType: "Bearer",
+      expiresIn: "3600",
+    };
+    await this.db.accessToken.create({
+      data: {
+        date: new Date(),
+        json_header: headers,
+        json_payload: payload,
+        json_response: response
+      },
+    });
+    return response;
+  };
+  
+  isTimestampValid = (timestamp) => {
+    const clientTime = new Date(timestamp);
+    const currentTime = new Date();
+    console.log(currentTime)
+  
+    const diff = Math.abs(currentTime - clientTime);
+    console.log(diff <= 5 * 60 * 1000)
+    return diff <= 5 * 60 * 1000;
   };
 
+  generateSignature = (stringToSign) => {
+    const signer = crypto.createSign('SHA256');
+    signer.update(stringToSign);
+    signer.end();
+    return signer.sign(this.privateKey, 'base64');
+  };
+
+  generateAccessToken = (clientKey, timestamp) => {
+    return jwt.sign(
+      { clientKey, timestamp },
+      this.privateKey,
+      {
+        algorithm: 'RS256',
+        expiresIn: 3600,
+      }
+    );
+  };
+  
 }
 
 export default AccessTokenService;  
