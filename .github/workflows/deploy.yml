@@ -26,7 +26,14 @@ jobs:
           --exclude='public/' \
           --exclude='uploads/' \
           -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.VPS_PORT_PROD }}" \
-          ./ ${{ secrets.VPS_USER_PROD }}@${{ secrets.VPS_HOST_PROD }}:/root/production/website-cpi
+          ./ ${{ secrets.VPS_USER_PROD }}@${{ secrets.VPS_HOST_PROD }}:/home/${{ secrets.VPS_USER_PROD }}/staging/payment-gateway-test
+    - name: Debug secrets and connection info
+      run: |
+        echo "=== Debugging Secrets ==="
+        echo "VPS_HOST_PROD: [${{ secrets.VPS_HOST_PROD }}]"
+        echo "VPS_USER_PROD: [${{ secrets.VPS_USER_PROD }}]"
+        echo "VPS_PORT_PROD: [${{ secrets.VPS_PORT_PROD }}]"
+        echo "VPS_PASSWORD_PROD: [hidden intentionally]"
 
     - name: Install Dependencies and Run Prisma Migrations
       run: |
@@ -44,7 +51,7 @@ jobs:
           npm install -g pm2
 
           # Go to the app directory
-          cd /root/staging/sade-pmb-v2-BE
+          cd /home/${{ secrets.VPS_USER_PROD }}/staging/payment-gateway-test
 
           # Install dependencies
           npm install
