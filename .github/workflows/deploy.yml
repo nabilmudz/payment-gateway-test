@@ -18,6 +18,14 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y sshpass openssh-client rsync
 
+    - name: Debug secrets and connection info
+      run: |
+        echo "=== Debugging Secrets ==="
+        echo "VPS_HOST_PROD: [${{ secrets.VPS_HOST_PROD }}]"
+        echo "VPS_USER_PROD: [${{ secrets.VPS_USER_PROD }}]"
+        echo "VPS_PORT_PROD: [${{ secrets.VPS_PORT_PROD }}]"
+        echo "VPS_PASSWORD_PROD: [hidden intentionally]"
+        
     - name: Sync Files to VPS (exclude .env and necessary folder)
       run: |
         sshpass -p "${{ secrets.VPS_PASSWORD_PROD }}" rsync -avz --delete \
@@ -27,13 +35,6 @@ jobs:
           --exclude='uploads/' \
           -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.VPS_PORT_PROD }}" \
           ./ ${{ secrets.VPS_USER_PROD }}@${{ secrets.VPS_HOST_PROD }}:/home/${{ secrets.VPS_USER_PROD }}/staging/payment-gateway-test
-    - name: Debug secrets and connection info
-      run: |
-        echo "=== Debugging Secrets ==="
-        echo "VPS_HOST_PROD: [${{ secrets.VPS_HOST_PROD }}]"
-        echo "VPS_USER_PROD: [${{ secrets.VPS_USER_PROD }}]"
-        echo "VPS_PORT_PROD: [${{ secrets.VPS_PORT_PROD }}]"
-        echo "VPS_PASSWORD_PROD: [hidden intentionally]"
 
     - name: Install Dependencies and Run Prisma Migrations
       run: |
