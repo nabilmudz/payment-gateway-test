@@ -13,22 +13,14 @@ jobs:
 
     steps:
     - name: Checkout Code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
-    - name: Install SSH and SSHPass
+    - name: Install SSH and Rsync
       run: |
         sudo apt-get update
-        sudo apt-get install -y sshpass openssh-client rsync
+        sudo apt-get install -y sshpass rsync
 
-    - name: Debug secrets and connection info
-      run: |
-        echo "=== Debugging Secrets ==="
-        echo "VPS_HOST_PROD: [${{ secrets.VPS_HOST_PROD }}]"
-        echo "VPS_USER_PROD: [${{ secrets.VPS_USER_PROD }}]"
-        echo "VPS_PORT_PROD: [${{ secrets.VPS_PORT_PROD }}]"
-        echo "VPS_PASSWORD_PROD: [hidden intentionally]"
-
-    - name: Sync Files to VPS (exclude .env and necessary folder)
+    - name: Sync Files to VPS (exclude unnecessary stuff)
       run: |
         sshpass -p "${{ secrets.VPS_PASSWORD_PROD }}" rsync -avz --delete \
           --exclude='.env' \
@@ -38,28 +30,23 @@ jobs:
           -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.VPS_PORT_PROD }}" \
           ./ ${{ secrets.VPS_USER_PROD }}@${{ secrets.VPS_HOST_PROD }}:/home/${{ secrets.VPS_USER_PROD }}/staging/payment-gateway-test
 
-    - name: Install Dependencies and Run Prisma Migrations
+    - name: Deploy with Docker
       run: |
         sshpass -p "${{ secrets.VPS_PASSWORD_PROD }}" ssh -o StrictHostKeyChecking=no -p ${{ secrets.VPS_PORT_PROD }} ${{ secrets.VPS_USER_PROD }}@${{ secrets.VPS_HOST_PROD }} << 'EOF'
-          # Set the Node.js version to 20.x if it's not already set
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # Load NVM
-          nvm install 20
-          nvm use 20
+        cd /home/${{ secrets.VPS_USER_PROD }}/staging/payment-gateway-test
 
-          # Verify Node.js version
-          node -v
+        # Make sure Docker is installed
+        if ! command -v docker &> /dev/null
+        then
+            echo "Docker not found. Installing..."
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sh get-docker.sh
+        fi
 
-          # Install PM2 if not already installed
-          npm install -g pm2
+        # Build and run the container
+        docker compose down
+        docker compose up -d --build
 
-          # Go to the app directory
-          cd /home/${{ secrets.VPS_USER_PROD }}/staging/payment-gateway-test
-
-          # Install dependencies
-          npm install
-
-          # Run Prisma Migrations
-          npx prisma migrate dev
-
+        # Run Prisma migrations (deploy mode, not dev)
+        docker compose exec backend npx prisma migrate deploy
         EOF
