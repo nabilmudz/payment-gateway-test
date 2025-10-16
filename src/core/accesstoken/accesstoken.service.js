@@ -18,6 +18,7 @@ class AccessTokenService extends BaseService {
       "x-client-key": clientKey,
       "x-timestamp": timestamp,
       "x-signature": clientSignature,
+      "Content-Type": "application/json",
     }
 
     const stringToSign = `${clientKey}|${timestamp}`;
