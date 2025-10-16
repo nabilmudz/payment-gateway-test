@@ -10,3 +10,7 @@ services:
     memswap_limit: 1g
     networks:
       - myapp_net
+
+networks:
+  myapp_net:
+    driver: bridge
