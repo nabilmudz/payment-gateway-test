@@ -3,10 +3,11 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm i
+RUN apk add --no-cache openssl
+RUN npm ci --only=production
 
 COPY . .
 
 EXPOSE 8001
 
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "start"]
