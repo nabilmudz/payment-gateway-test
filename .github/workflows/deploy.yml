@@ -8,6 +8,8 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: secrets
 
     steps:
     - name: Checkout Code
@@ -25,7 +27,7 @@ jobs:
         echo "VPS_USER_PROD: [${{ secrets.VPS_USER_PROD }}]"
         echo "VPS_PORT_PROD: [${{ secrets.VPS_PORT_PROD }}]"
         echo "VPS_PASSWORD_PROD: [hidden intentionally]"
-        
+
     - name: Sync Files to VPS (exclude .env and necessary folder)
       run: |
         sshpass -p "${{ secrets.VPS_PASSWORD_PROD }}" rsync -avz --delete \
