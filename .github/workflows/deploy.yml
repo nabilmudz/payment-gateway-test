@@ -29,7 +29,6 @@ jobs:
           --exclude='uploads/' \
           -e "ssh -o StrictHostKeyChecking=no -p ${{ secrets.VPS_PORT_PROD }}" \
           ./ ${{ secrets.VPS_USER_PROD }}@${{ secrets.VPS_HOST_PROD }}:/home/${{ secrets.VPS_USER_PROD }}/staging/payment-gateway-test
-
     - name: Deploy with Docker
       run: |
         sshpass -p "${{ secrets.VPS_PASSWORD_PROD }}" ssh -o StrictHostKeyChecking=no -p ${{ secrets.VPS_PORT_PROD }} ${{ secrets.VPS_USER_PROD }}@${{ secrets.VPS_HOST_PROD }} << 'EOF'
@@ -43,10 +42,27 @@ jobs:
             sh get-docker.sh
         fi
 
-        # Build and run the container
-        docker compose down
-        docker compose up -d --build
+        # Check docker compose plugin
+        if ! docker compose version &> /dev/null
+        then
+            echo "Docker Compose plugin missing. Installing..."
+            sudo apt-get install -y docker-compose-plugin
+        fi
 
-        # Run Prisma migrations (deploy mode, not dev)
-        docker compose exec backend npx prisma migrate deploy
+        echo "=== Rebuilding container ==="
+        docker compose down --remove-orphans
+        docker compose build
+        docker compose up -d
+
+        echo "=== Waiting for backend to be ready ==="
+        sleep 10
+
+        echo "=== Running Prisma migration ==="
+        docker compose exec -T backend npx prisma migrate deploy || (
+            echo "Migration failed, checking logs..."
+            docker compose logs backend
+            exit 1
+        )
+
+        echo "=== Deployment completed ==="
         EOF
